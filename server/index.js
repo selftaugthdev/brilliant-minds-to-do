@@ -47,7 +47,7 @@ app.get("/:id", async (req, res) => {
     }
 });
 
-app.post('/create-ideas', async (req, res) => {
+/* app.post('/create-ideas', async (req, res) => {
     try {
         // Access the data sent in the request body
         const { title, description } = req.body;
@@ -63,7 +63,26 @@ app.post('/create-ideas', async (req, res) => {
         console.error("Error: ", error);
         res.status(500).send("An error occurred on the server");
     }
+}); */
+
+app.post('/add-idea', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const { description } = req.body; // Extracting description from request body
+        const result = await connection.query("INSERT INTO ideas (description) VALUES (?)", [description]);
+
+        res.json({ message: "Idea added successfully", ideaId: result.insertId.toString() });
+    } catch (error) {
+        console.error("Error: ", error);
+        res.status(500).json({ message: "An error occurred on the server", error: error.toString() });
+    } finally {
+        if (connection) connection.end();
+    }
 });
+
+
+
 
 
 app.listen(PORT, () => {

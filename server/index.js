@@ -1,6 +1,9 @@
 import express from "express";
 import { config } from "dotenv";
 import mariadb from "mariadb";
+const cors = require('cors');
+app.use(cors());
+
 config();
 
 const PORT = process.env.PORT || 3000;
@@ -30,7 +33,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get("/show-ideas/:id", async (req, res) => {
+app.get("/:id", async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
@@ -45,9 +48,24 @@ app.get("/show-ideas/:id", async (req, res) => {
     }
 });
 
-/* app.post('/create-ideas', async (req, res) => {
-    //code
-}) */
+app.post('/create-ideas', async (req, res) => {
+    try {
+        // Access the data sent in the request body
+        const { title, description } = req.body;
+
+        // TODO: Process this data (e.g., validate it, save it to a database)
+
+        // For now, just logging the received data
+        console.log("Received Idea: ", title, description);
+
+        // Send a response back to the client
+        res.json({ message: "Idea successfully received", data: req.body });
+    } catch (error) {
+        console.error("Error: ", error);
+        res.status(500).send("An error occurred on the server");
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`);

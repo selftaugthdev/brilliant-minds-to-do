@@ -7,8 +7,11 @@ config();
 const PORT = process.env.PORT || 3000;
 const app = express();
 
+app.set('view engine', 'ejs'); // Tell Express to use EJS as the templating engine
+
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
@@ -22,13 +25,13 @@ app.get('/', async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const data = await connection.query("SELECT * FROM ideas");
-        res.send(data);
-    } catch(err) {
+        const rows = await connection.query("SELECT * FROM ideas");
+        res.render('index', { ideas: rows }); // Render 'index.ejs' and pass the ideas data
+    } catch (err) {
         console.error("Error: ", err);
-        res.status(500).send('Server Error');
+        res.status(500).send("An error occurred while retrieving ideas");
     } finally {
-        if (connection) connection.end();
+        if (connection) connection.release();
     }
 });
 
@@ -69,21 +72,18 @@ app.post('/add-idea', async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const { description } = req.body; // Extracting description from request body
-        const result = await connection.query("INSERT INTO ideas (description) VALUES (?)", [description]);
+        const { title, description } = req.body; // Extracting title and description from the request body
+        const result = await connection.query("INSERT INTO ideas (title, description) VALUES (?, ?)", [title, description]);
 
+        // Convert insertId to string to avoid BigInt serialization issues.
         res.json({ message: "Idea added successfully", ideaId: result.insertId.toString() });
     } catch (error) {
         console.error("Error: ", error);
         res.status(500).json({ message: "An error occurred on the server", error: error.toString() });
     } finally {
-        if (connection) connection.end();
+        if (connection) connection.release(); // Use release() for pool connections
     }
 });
-
-
-
-
 
 app.listen(PORT, () => {
     console.log(`Example app listening on port ${PORT}`);

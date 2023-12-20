@@ -2,12 +2,14 @@ import express from "express";
 import { config } from "dotenv";
 import mariadb from "mariadb";
 import cors from "cors";
+import path from 'path';
 config();
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.set('view engine', 'ejs'); // Tell Express to use EJS as the templating engine
+app.set('view engine', 'ejs'); // Set EJS as the templating engine
+app.set('views', path.join(path.resolve(), 'views')); // Set the path to the views directory
 
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
@@ -31,7 +33,22 @@ app.get('/', async (req, res) => {
         console.error("Error: ", err);
         res.status(500).send("An error occurred while retrieving ideas");
     } finally {
-        if (connection) connection.release();
+        if (connection) connection.end();
+    }
+});
+
+app.delete('/:id', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const { id } = req.params;
+        await connection.query("DELETE FROM ideas WHERE id = ?", [id]);
+        res.json({ message: "Idea Deleted Succesfully"});
+    } catch (error) {
+        console.error("Error: ", error);
+        res.status(500).json({ message: "An error occurred on the server", error: error.toString() });
+    } finally {
+        if (connection) connection.end();
     }
 });
 
@@ -81,7 +98,7 @@ app.post('/add-idea', async (req, res) => {
         console.error("Error: ", error);
         res.status(500).json({ message: "An error occurred on the server", error: error.toString() });
     } finally {
-        if (connection) connection.release(); // Use release() for pool connections
+        if (connection) connection.end(); 
     }
 });
 

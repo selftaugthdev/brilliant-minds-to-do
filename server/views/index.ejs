@@ -2,16 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ideas</title>
+    <title>Ideas List</title>
 </head>
 <body>
+    <h1>Ideas</h1>
     <div id="ideasContainer">
         <% ideas.forEach(function(idea) { %>
-            <div class="idea">
+            <div class="idea" id="idea-<%= idea.id %>">
                 <h2><%= idea.title %></h2>
                 <p><%= idea.description %></p>
+                <button onclick="deleteIdea('<%= idea.id %>')">Delete</button>
             </div>
         <% }); %>
     </div>
+
+    <script>
+    function deleteIdea(id) {
+        fetch('/' + id, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove the idea element from the page
+            const ideaElement = document.getElementById('idea-' + id);
+            ideaElement.remove();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    </script>
 </body>
 </html>

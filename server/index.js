@@ -1,9 +1,7 @@
 import express from "express";
 import { config } from "dotenv";
 import mariadb from "mariadb";
-const cors = require('cors');
-app.use(cors());
-
+import cors from "cors";
 config();
 
 const PORT = process.env.PORT || 3000;
@@ -17,6 +15,7 @@ const pool = mariadb.createPool({
     connectionLimit: 5
 });
 
+app.use(cors());
 app.use(express.json());
 
 app.get('/', async (req, res) => {
